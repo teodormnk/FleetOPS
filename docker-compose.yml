@@ -51,9 +51,41 @@ services:
     networks:
       - fleet_net
 
-volumes:
-  fleetops_postgres_data:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: fleet_prometheus
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - fleet_net
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: fleet_loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+     - "3100:3100"
+    networks:
+     - fleet_net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: fleet_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - fleet_net
 
 networks:
-  fleet_net:
-    driver: bridge
+   fleet_net:
+     driver: bridge
+
+volumes:
+  fleetops_postgres_data:
