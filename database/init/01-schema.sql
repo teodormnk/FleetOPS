@@ -1,0 +1,35 @@
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('ADMIN', 'CLIENT')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS vehicles (
+    id SERIAL PRIMARY KEY,
+    plate_number VARCHAR(20) UNIQUE NOT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('AVAILABLE', 'BUSY', 'MAINTENANCE')),
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    pickup_location VARCHAR(100) NOT NULL,
+    destination VARCHAR(100) NOT NULL,
+    status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'ASSIGNED', 'COMPLETED', 'CANCELLED')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS routes (
+    id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES orders(id),
+    vehicle_id INTEGER REFERENCES vehicles(id),
+    estimated_duration_seconds INTEGER,
+    distance_km DOUBLE PRECISION,
+    route_data TEXT,
+    calculated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
