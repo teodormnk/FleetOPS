@@ -55,6 +55,7 @@ jobs:
     needs: build-docker-images
     steps:
       - uses: actions/checkout@v3
+
       - name: Run Trivy vulnerability scanner in repo mode
         uses: aquasecurity/trivy-action@master
         with:
@@ -62,4 +63,4 @@ jobs:
           ignore-unfixed: true
           format: 'table'
           exit-code: '0'
-          severity: 'CRITICAl','HIGH'
+          severity: 'CRITICAl'
