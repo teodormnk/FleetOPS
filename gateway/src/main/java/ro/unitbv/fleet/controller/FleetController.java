@@ -7,10 +7,14 @@ import ro.unitbv.fleet.repository.OrderRepository;
 import ro.unitbv.fleet.repository.VehicleRepository;
 import io.swagger.v3.oas.annotations.Operation;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.http.HttpHeaders; 
 import org.springframework.http.MediaType;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,13 +27,24 @@ import java.util.List;
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
 public class FleetController {
-    @Autowired
-    private VehicleRepository vehicleRepository;
+    private static final Logger logger = LoggerFactory.getLogger(FleetController.class);
 
-    @Autowired
+    private VehicleRepository vehicleRepository;
     private OrderRepository orderRepository;
 
+    private final Counter routeCalculationCounter;
+
     private final String ROUTING_SERVICE_URL = "http://routing-service:8081/route";
+
+    public FleetController(VehicleRepository vehicleRepository,
+                           OrderRepository orderRepository,
+                           MeterRegistry meterRegistry) {
+        this.vehicleRepository = vehicleRepository;
+        this.orderRepository = orderRepository;
+        this.routeCalculationCounter = Counter.builder("fleet.routes.calculated")
+                .description("Total number of route calculations performed")
+                .register(meterRegistry);
+    }
 
     @Operation(summary = "Shows all vehicles in the fleet in a list")
     @GetMapping("/vehicles")
@@ -41,6 +56,7 @@ public class FleetController {
     @PostMapping("/orders")
     public Order createOrder(@RequestBody Order order) {
         order.setStatus("PENDING");
+        logger.info("Processing new order for user ID: " + order.getUserId());
         
         try{
             RestTemplate restTemplate = new RestTemplate();
@@ -63,11 +79,12 @@ public class FleetController {
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 RouteResponse route = response.getBody();
-                System.out.println("Ruta calculata (km): " + route.getDistanceKm());
+                routeCalculationCounter.increment();
+                logger.info("Calculated route (km): " + route.getDistanceKm());
             } 
         } 
         catch (Exception e) {
-            System.err.println("Eroare la apelarea serviciului de rutare: " + e.getMessage());
+            logger.error("Error calling routing service: " + e.getMessage());
         }
 
         return orderRepository.save(order);

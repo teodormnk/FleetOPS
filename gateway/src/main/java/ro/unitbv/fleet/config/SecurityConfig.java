@@ -18,7 +18,13 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         System.out.println("Security Config initialized with JWT Secret loaded: " + (jwtSecret != null ? "YES (Length: " + jwtSecret.length() + ")" : "NO"));
         http.csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth.requestMatchers("/api/**", "/ws/**", "/swagger-ui/**", "v3/api-docs/**").permitAll()
+            .authorizeHttpRequests(auth -> auth.requestMatchers(
+                "/api/**", 
+                "/ws/**", 
+                "/swagger-ui/**", 
+                "v3/api-docs/**",
+                "/actuator/**"
+            ).permitAll()
             .anyRequest().authenticated());
 
         return http.build();
