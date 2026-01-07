@@ -9,7 +9,7 @@
 
 ---
 
-## 🏗️ Arhitectura Sistemului
+## 🏗️ Arhitectura sistemului
 
 Sistemul este modularizat în containere Docker interconectate:
 
@@ -22,26 +22,26 @@ Sistemul este modularizat în containere Docker interconectate:
 
 ---
 
-## 🛠️ Tehnologii și Standarde Implementate
+## 🛠️ Tehnologii și standarde implementate
 
 Acest proiect bifează cerințele unui mediu modern DevOps:
 
-* [cite_start]**Orchestrare:** `docker-compose` pentru pornirea întregului stack[cite: 59].
-* [cite_start]**API Gateway & WebSocket:** Spring Boot cu documentație **OpenAPI / Swagger**[cite: 42, 56].
-* [cite_start]**Polyglot Microservices:** Integrare HTTP sincronă între Java și C++[cite: 50].
-* [cite_start]**Security & Secret Management:** Credențialele nu sunt stocate în cod, ci injectate prin variabile de mediu (`.env`)[cite: 62].
-* [cite_start]**Observabilitate:** Health Checks, Loguri structurate și metrici **Prometheus** custom (`fleet.routes.calculated`)[cite: 65, 108].
-* [cite_start]**CI/CD:** Pipeline automatizat prin **GitHub Actions** (Build, Test, Docker packaging)[cite: 69].
+* **Orchestrare:** `docker-compose` pentru pornirea întregului stack.
+* **API Gateway & WebSocket:** Spring Boot cu documentație **OpenAPI / Swagger**.
+* **Polyglot Microservices:** Integrare HTTP sincronă între Java și C++.
+* **Security & Secret Management:** Credențialele nu sunt stocate în cod, ci injectate prin variabile de mediu (`.env`).
+* **Observabilitate:** Health Checks, Loguri structurate și metrici **Prometheus** custom (`fleet.routes.calculated`).
+* **CI/CD:** Pipeline automatizat prin **GitHub Actions** (Build, Test, Docker packaging).
 
 ---
 
-## 🚀 Instrucțiuni de Instalare și Pornire
+## 🚀 Instrucțiuni de instalare și pornire
 
-### 1. Cerințe Preliminare
+### 1. Cerințe preliminare
 * Docker Desktop instalat și pornit.
 * Porturile `8088` și `5433` libere pe mașina locală.
 
-### 2. Configurare Secrete (Obligatoriu)
+### 2. Configurare secrete (obligatoriu)
 Din motive de securitate, fișierul de configurare nu este inclus în repository.
 Creați un fișier numit **`.env`** în rădăcina proiectului și adăugați următorul conținut:
 
@@ -60,7 +60,7 @@ JWT_SECRET=Cheie_Secreta_Foarte_Lunga_Si_Sigura_Pentru_Demo_2024
 JWT_EXPIRATION_MS=86400000
 ```
 
-### 3. Pornirea Aplicației
+### 3. Pornirea aplicației
 Deschideți un terminal în folderul proiectului și rulați comanda unică de orchestrare:
 
 ```bash
@@ -68,11 +68,11 @@ docker compose up --build
 ```
 > **Notă:** Așteptați până când vedeți log-ul: `Started GatewayApplication in ... seconds`.
 
-## 🎮 Utilizare și Endpoint-uri
+## 🎮 Utilizare și endpoint-uri
 
 Odată pornită aplicația, aveți acces la următoarele interfețe:
 
-### 🌍 1. Dashboard Vizual (Frontend)
+### 🌍 1. Dashboard vizual (Frontend)
 * **Acces:** [http://localhost:8088](http://localhost:8088)
 * Afișează o hartă (OpenStreetMap) cu pozițiile vehiculelor.
 * Pozițiile se actualizează automat la fiecare 3 secunde (simulare server-side).
@@ -81,12 +81,12 @@ Odată pornită aplicația, aveți acces la următoarele interfețe:
 * **Acces:** [http://localhost:8088/swagger-ui.html](http://localhost:8088/swagger-ui.html)
 * Interfață grafică ce permite vizualizarea și testarea manuală a endpoint-urilor REST.
 
-### 🔌 3. Endpoint-uri Principale (REST)
+### 🔌 3. Endpoint-uri principale (REST)
 
 * `GET /api/vehicles`: Listează flota curentă și statusul fiecărui vehicul.
 * `POST /api/orders`: Creează o comandă și declanșează calculul rutei în microserviciul C++.
 
-**Exemplu Body JSON:**
+**Exemplu body JSON:**
 ```json
 {
   "userId": 2,
@@ -103,12 +103,12 @@ Odată pornită aplicația, aveți acces la următoarele interfețe:
 
 ## 📊 4. Observabilitate
 
-* **Health Check:** `http://localhost:8088/actuator/health`
+* **Health check:** `http://localhost:8088/actuator/health`
   * Verifică starea serviciilor (ex: conexiunea la baza de date).
-* **Prometheus Metrics:** `http://localhost:8088/actuator/prometheus`
+* **Prometheus metrics:** `http://localhost:8088/actuator/prometheus`
   * Căutați metrica specifică: `fleet_routes_calculated_total`.
 
-## ⚙️ Structura Proiectului
+## ⚙️ Structura proiectului
 
 ```plaintext
 fleet-ops-project/
@@ -132,7 +132,7 @@ Proiectul include un workflow automatizat (`.github/workflows/main.yml`) care ru
 * **Docker Build:** Verifică dacă imaginile Docker (inclusiv compilarea C++) se construiesc corect.
 * **Security Scan (Opțional):** Scanează codul pentru vulnerabilități folosind Trivy.
 
-Dezvoltat de: Minca Teodor Andrei, Mincu Florin Adrian
-Grupa: 10LF342
-Facultatea de Matematică și Informatică, Universitatea Transilvania din Brașov
+Dezvoltat de: Minca Teodor Andrei, Mincu Florin Adrian <br>
+Grupa: 10LF342 <br>
+Facultatea de Matematică și Informatică, Universitatea Transilvania din Brașov <br>
 Proiect Arhitectură Cloud și DevOps
