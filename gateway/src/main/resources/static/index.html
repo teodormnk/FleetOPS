@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FleetOPS Dashboard</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+        .vehicle-icon{
+            filter: hue-rotate(120deg);
+        }
+    </style>
+</head> 
+
+<body class="bg-light">
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">FleetOPS Dashboard</h1>
+        <div class="card shadow-sm">
+            <h5 class="card-title">Connection status: <span id="status" class="badge bg-warning">Disconnected</span></h5>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <script>
+        var map = L.map('map').setView([45.6427, 25.5887], 13); 
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        var markers = {};
+        var stompClient = null;
+
+        function connect(){
+            var socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.debug = null;
+
+            stompClient.connect({}, function(frame) {
+                document.getElementById('status').textContent = 'Connected';
+                document.getElementById('status').className = 'badge bg-success';
+                console.log('Connected: ' + frame);
+
+                stompClient.subscribe('/topic/fleet', function(message) {
+                    var vehicles = JSON.parse(message.body);
+                    updateMap(vehicles);
+                });
+            }, function(error) {
+                document.getElementById('status').textContent = 'Disconnected';
+                document.getElementById('status').className = 'badge bg-danger';
+                console.log('Connection error: ' + error);
+            });
+        }
+
+        function updateMap(vehicles){
+            vehicles.forEach(vehicle => {
+                var id = vehicle.id;
+                var lat = vehicle.latitude;
+                var lon = vehicle.longitude;
+                var info = `<b>${vehicle.plateNumber}</b><br>Status: ${vehicle.status}`;
+
+                if(markers[id]){
+                    markers[id].setLatLng([lat, lon]).bindPopup(info);
+                } else {
+                    var marker = L.marker([lat, lon]).addTo(map).bindPopup(info);
+                    markers[id] = marker;
+                }
+            });
+        }
+
+        connect();
+    </script>
+</body>
+</html>
