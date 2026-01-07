@@ -7,16 +7,16 @@ services:
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: fleet_ops_db
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5433:5432"
+      - "${DB_PORT_EXTERNAL}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - fleetops_postgres_data:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d
     networks:
       - fleet_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d fleet_ops_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -27,12 +27,14 @@ services:
       dockerfile: Dockerfile
     container_name: fleet_gateway
     ports:
-      - "8088:8080"
+      - "${GATEWAY_PORT_EXTERNAL}:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/fleet_ops_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${DB_NAME}
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - ROUTING_SERVICE_URL=http://routing-service:8081
+      - ROUTING_SERVICE_URL=http://routing-service:8081/route
+      - APP_JWT_SECRET=${JWT_SECRET}
+      - APP_JWT_EXPIRATION=${JWT_EXPIRATION_MS}
     depends_on:
       db:
         condition: service_healthy
@@ -50,7 +52,7 @@ services:
       - fleet_net
 
 volumes:
-  postgres_data:
+  fleetops_postgres_data:
 
 networks:
   fleet_net:
