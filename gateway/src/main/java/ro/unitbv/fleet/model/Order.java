@@ -10,9 +10,9 @@ import java.time.LocalDateTime;
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int id;
 
-    private Long userId;
+    private int userId;
     private String pickupLocation;
     private String destination;
     private String status;
