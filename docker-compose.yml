@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: fleet_db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: fleet_ops_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - fleet_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d fleet_ops_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: fleet_gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/fleet_ops_db
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - ROUTING_SERVICE_URL=http://routing-service:8081
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - fleet_net
+
+  routing-service:
+    build:
+      context: ./routing-service
+      dockerfile: Dockerfile
+    container_name: fleet_routing
+    expose:
+      - "8081"
+    networks:
+      - fleet_net
+
+volumes:
+  postgres_data:
+
+networks:
+  fleet_net:
+    driver: bridge
