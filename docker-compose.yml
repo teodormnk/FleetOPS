@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: fleet_ops_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d
@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile
     container_name: fleet_gateway
     ports:
-      - "8080:8080"
+      - "8088:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/fleet_ops_db
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
