@@ -60,6 +60,7 @@ public class FleetController {
         Order saved = orderRepository.save(order);
 
         try{
+            routeCalculationCounter.increment();
             String orderJson = new ObjectMapper().findAndRegisterModules().writeValueAsString(saved);
             rabbitTemplate.convertAndSend(RabbitConfig.QUEUE_ORDER, orderJson);
             logger.info("Order sent to RabbitMQ: " + saved.getId());
