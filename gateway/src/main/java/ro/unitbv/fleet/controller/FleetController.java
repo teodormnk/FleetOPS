@@ -29,26 +29,16 @@ import java.util.List;
 public class FleetController {
     private static final Logger logger = LoggerFactory.getLogger(FleetController.class);
 
+    @Autowired
     private VehicleRepository vehicleRepository;
+
+    @Autowired
     private OrderRepository orderRepository;
 
     private final Counter routeCalculationCounter;
 
-    private final String ROUTING_SERVICE_URL = "http://routing-service:8081/route";
-
     @Autowired
     private RabbitTemplate rabbitTemplate;
-
-    @PostMapping("/orders")
-    public Order createOrder(@RequestBody Order order) {
-        order.setStatus("PROCESSING");
-        Order saved = orderRepository.save(order);
-
-        String orderJson = new ObjectMapper().writeValueAsString(saved);
-        rabbitTemplate.convertAndSend(RabbitConfig.QUEUE_ORDER, orderJson);
-
-        return saved;
-    }
 
     public FleetController(VehicleRepository vehicleRepository,
                            OrderRepository orderRepository,
@@ -66,41 +56,20 @@ public class FleetController {
         return vehicleRepository.findAll();
     }
 
-    @Operation(summary = "Creates a new order")
+    @Operation(summary = "Creates a new order (ASync via RabbitMQ)")
     @PostMapping("/orders")
     public Order createOrder(@RequestBody Order order) {
-        order.setStatus("PENDING");
-        logger.info("Processing new order for user ID: " + order.getUserId());
-        
+        order.setStatus("PROCESSING");
+        Order saved = orderRepository.save(order);
+
         try{
-            RestTemplate restTemplate = new RestTemplate();
-            String requestJson = """
-                    {
-                       "startLat": 44.4268, "startLon": 26.1025,
-                        "endLat": 44.5548, "endLon": 26.0846
-                    }
-                    """;
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> request = new HttpEntity<>(requestJson, headers);
-
-            ResponseEntity<RouteResponse> response = restTemplate.postForEntity(
-                    ROUTING_SERVICE_URL,
-                    request,
-                    RouteResponse.class
-            );
-
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                RouteResponse route = response.getBody();
-                routeCalculationCounter.increment();
-                logger.info("Calculated route (km): " + route.getDistanceKm());
-            } 
-        } 
-        catch (Exception e) {
-            logger.error("Error calling routing service: " + e.getMessage());
+            String orderJson = new ObjectMapper().writeValueAsString(saved);
+            rabbitTemplate.convertAndSend(RabbitConfig.QUEUE_ORDER, orderJson);
+            logger.info("Order sent to RabbitMQ: " + saved.getId());
+        } catch (Exception e) {
+            logger.error("Failed to send order to RabbitMQ", e);
         }
 
-        return orderRepository.save(order);
+        return saved;
     }
 }
