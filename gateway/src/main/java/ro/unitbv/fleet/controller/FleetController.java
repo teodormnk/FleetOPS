@@ -1,6 +1,10 @@
 package ro.unitbv.fleet.controller;
 
-import ro.unitbv.fleet.dto.RouteResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import ro.unitbv.fleet.config.RabbitConfig;
+
 import ro.unitbv.fleet.model.Order;
 import ro.unitbv.fleet.model.Vehicle;
 import ro.unitbv.fleet.repository.OrderRepository;
@@ -12,14 +16,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.http.HttpHeaders; 
-import org.springframework.http.MediaType;
-
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
