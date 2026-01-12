@@ -3,7 +3,7 @@ package ro.unitbv.fleet.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Queue;
+import org.springframework.amqp.core.Queue;
 
 @Configuration
 public class RabbitConfig {

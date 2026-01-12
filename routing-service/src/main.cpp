@@ -41,7 +41,7 @@ void check_amqp_error(amqp_rpc_reply_t x, char const *context) {
 int main() {
     std::cout << "Starting C++ Routing Service (Event Driven / RabbitMQ)..." << std::endl;
 
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    std::this_thread::sleep_for(std::chrono::seconds(40));
 
     const char *hostname = "rabbitmq";
     int port = 5672;
@@ -52,18 +52,28 @@ int main() {
     amqp_socket_t *socket = NULL;
     int status;
 
-    conn = amqp_new_connection();
-    socket = amqp_tcp_socket_new(conn);
-    if (!socket) {
-        std::cerr << "Could not create TCP socket" << std::endl;
-        return 1;
-    }
+    while (true) {
+            conn = amqp_new_connection();
+            socket = amqp_tcp_socket_new(conn);
 
-    status = amqp_socket_open(socket, hostname, port);
-    if (status) {
-        std::cerr << "Could not open socket to RabbitMQ" << std::endl;
-        return 1;
-    }
+            if (!socket) {
+                std::cerr << "Could not create TCP socket. Retrying in 5s..." << std::endl;
+                std::this_thread::sleep_for(std::chrono::seconds(5));
+                continue;
+            }
+
+            status = amqp_socket_open(socket, hostname, port);
+
+            if (status) {
+                std::cout << "RabbitMQ not ready yet (Port closed). Retrying in 5s..." << std::endl;
+                amqp_destroy_connection(conn);
+                std::this_thread::sleep_for(std::chrono::seconds(5));
+                continue;
+            } else {
+                std::cout << "SUCCESS: Connected to RabbitMQ!" << std::endl;
+                break;
+            }
+        }
 
     check_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, "guest", "guest"), "Logging in");
     amqp_channel_open(conn, 1);

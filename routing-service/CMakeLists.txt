@@ -8,4 +8,4 @@ find_package(Threads REQUIRED)
 find_library(RABBITMQ_LIB rabbitmq)
 add_executable(routing_app src/main.cpp)
 
-target_link_libraries(routing_app PRIVATE Threads::Threads)
+target_link_libraries(routing_app PRIVATE Threads::Threads rabbitmq)

@@ -16,7 +16,7 @@ RUN mkdir build && cd build && \
     make
 
 FROM alpine:3.18
-RUN apk add --no-cache libstdc++ libgcc
+RUN apk add --no-cache libstdc++ libgcc rabbitmq-c
 
 WORKDIR /app
 COPY --from=build /app/build/routing_app .

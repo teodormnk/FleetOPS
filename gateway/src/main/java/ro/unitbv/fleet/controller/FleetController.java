@@ -56,7 +56,7 @@ public class FleetController {
     @Operation(summary = "Creates a new order (ASync via RabbitMQ)")
     @PostMapping("/orders")
     public Order createOrder(@RequestBody Order order) {
-        order.setStatus("PROCESSING");
+        order.setStatus("PENDING");
         Order saved = orderRepository.save(order);
 
         try{

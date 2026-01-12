@@ -41,6 +41,20 @@ services:
     networks:
       - fleet_net
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: fleet_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - fleet_net
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   routing-service:
     build:
       context: ./routing-service
@@ -50,6 +64,9 @@ services:
       - "8081"
     networks:
       - fleet_net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
   prometheus:
     image: prom/prometheus:latest
@@ -80,15 +97,6 @@ services:
     depends_on:
       - prometheus
       - loki
-    networks:
-      - fleet_net
-
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: fleet_rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
     networks:
       - fleet_net
 
