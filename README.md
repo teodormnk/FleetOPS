@@ -13,12 +13,14 @@
 
 Sistemul este modularizat în containere Docker interconectate:
 
-| Serviciu | Tehnologie | Rol și Descriere |
-| :--- | :--- | :--- |
-| **Gateway** | **Java (Spring Boot)** | Punctul central de intrare. Gestionează API-ul REST, conexiunile WebSocket, securitatea și comunicarea cu baza de date. |
-| **Routing Service** | **C++ 17** | Microserviciu de calcul intensiv (High-Performance). Calculează rute și distanțe folosind algoritmi geometrici, expunând un API HTTP intern. |
-| **Database** | **PostgreSQL 15** | Stocare persistentă pentru utilizatori, vehicule și comenzi. Include un seed inițial de date. |
-| **Frontend** | **HTML5 / Leaflet.js** | Dashboard interactiv pentru vizualizarea pozițiilor pe hartă în timp real (prin WebSocket). |
+| Serviciu | Tehnologie | Rol și descriere                                                                                      |
+| :--- | :--- |:------------------------------------------------------------------------------------------------------|
+| **Gateway** | **Java (Spring Boot)** | Punctul central de intrare. Gestionează API, WebSocket și publică evenimente în Message Broker.       |
+| **Routing Service** | **C++ 17** | Microserviciu consumator. Ascultă coada de mesaje, calculează rute asincron și returnează rezultatul. |
+| **Message Broker** | **RabbitMQ** | Asigură decuplarea serviciilor și comunicarea asincronă (Event-Driven).                               |
+| **Database** | **PostgreSQL 15** | Stocare persistentă pentru utilizatori, vehicule și comenzi.                                          |
+| **Observability** | **Grafana / Loki / Prometheus** | Stack complet de monitorizare: Vizualizare, Agregare Loguri și Colectare Metrici.                     |
+| **Frontend** | **HTML5 / Leaflet.js** | Dashboard interactiv pentru vizualizarea flotei.                                                      |
 
 ---
 
@@ -26,12 +28,11 @@ Sistemul este modularizat în containere Docker interconectate:
 
 Acest proiect bifează cerințele unui mediu modern DevOps:
 
-* **Orchestrare:** `docker-compose` pentru pornirea întregului stack.
-* **API Gateway & WebSocket:** Spring Boot cu documentație **OpenAPI / Swagger**.
-* **Polyglot Microservices:** Integrare HTTP sincronă între Java și C++.
-* **Security & Secret Management:** Credențialele nu sunt stocate în cod, ci injectate prin variabile de mediu (`.env`).
-* **Observabilitate:** Health Checks, Loguri structurate și metrici **Prometheus** custom (`fleet.routes.calculated`).
-* **CI/CD:** Pipeline automatizat prin **GitHub Actions** (Build, Test, Docker packaging).
+* **Orchestrare:** `docker-compose` pentru pornirea întregului stack (7 containere).
+* **Event-Driven Architecture:** Comunicare asincronă între Java și C++ folosind **RabbitMQ** (înlocuiește HTTP sincron).
+* **Security & Secret Management:** Credențialele injectate prin `.env`.
+* **Advanced Observability:** Stack complet **Prometheus** (Metrici) + **Loki** (Loguri centralizate) + **Grafana** (Vizualizare Dashboard).
+* **CI/CD & Security:** Pipeline GitHub Actions care include build, teste și **scanare de vulnerabilități cu Trivy**.
 
 ---
 
@@ -39,7 +40,11 @@ Acest proiect bifează cerințele unui mediu modern DevOps:
 
 ### 1. Cerințe preliminare
 * Docker Desktop instalat și pornit.
-* Porturile `8088` și `5433` libere pe mașina locală.
+* Porturile următoare libere:
+  * `8088` (App Gateway)
+  * `5433` (Database)
+  * `3000` (Grafana Dashboard)
+  * `15672` (RabbitMQ Management)
 
 ### 2. Configurare secrete (obligatoriu)
 Din motive de securitate, fișierul de configurare nu este inclus în repository.
@@ -95,32 +100,46 @@ Odată pornită aplicația, aveți acces la următoarele interfețe:
 }
 ```
 
-**Efect:**
+**Efect (Flux asincron):**
+1.  Gateway-ul salvează comanda cu status `PROCESSING` și trimite un mesaj în coada `order.queue`.
+2.  Utilizatorul primește răspuns imediat (`200 OK`), fără a aștepta calculul rutei (Non-blocking).
+3.  Serviciul C++ preia mesajul, calculează ruta și trimite rezultatul în `order.route`.
+4.  Gateway-ul consumă rezultatul și actualizează comanda în baza de date.
 
-* Gateway-ul (Java) trimite coordonatele la serviciul de rutare (C++).
-* Serviciul C++ returnează distanța și punctele rutei.
-* Gateway-ul salvează comanda și incrementează metrica de monitoring.
+## 📊 4. Observabilitate Avansată
 
-## 📊 4. Observabilitate
+Sistemul expune un stack complet de monitorizare accesibil local:
 
-* **Health check:** `http://localhost:8088/actuator/health`
-  * Verifică starea serviciilor (ex: conexiunea la baza de date).
-* **Prometheus metrics:** `http://localhost:8088/actuator/prometheus`
-  * Căutați metrica specifică: `fleet_routes_calculated_total`.
+### 📈 Grafana (Vizualizare & Loguri)
+* **Acces:** [http://localhost:3000](http://localhost:3000)
+* **User/Parolă:** `admin` / `admin` (puteți da skip la schimbarea parolei).
+* **Ce puteți vedea:**
+  1.  Mergeți la meniul **Explore** (busola din stânga).
+  2.  Selectați sursa **Prometheus** pentru a vedea grafice (query: `fleet_routes_calculated_total`).
+  3.  Selectați sursa **Loki** pentru a vedea logurile centralizate din toate containerele (label: `{app="fleet-gateway"}`).
+
+### 🐰 RabbitMQ Management
+* **Acces:** [http://localhost:15672](http://localhost:15672)
+* **User/Parolă:** `guest` / `guest`
+* **Funcționalitate:** Monitorizați cozile de mesaje (`order.queue`, `order.route`) și debitul de procesare în timp real.
+
+### ❤️ Health Checks
+* **API:** [http://localhost:8088/actuator/health](http://localhost:8088/actuator/health)
 
 ## ⚙️ Structura proiectului
 
 ```plaintext
 fleet-ops-project/
-├── .github/workflows/   # Pipeline CI/CD (GitHub Actions)
+├── .github/workflows/   # Pipeline CI/CD + Trivy Security Scan
+├── observability/       # Configurare Prometheus
 ├── database/            # Scripturi SQL (Schema + Seed)
-├── gateway/             # Aplicația principală (Spring Boot)
-│   ├── src/main/java    # Cod sursă Java
-│   └── src/main/resources/static # Frontend (HTML/JS)
-├── routing-service/     # Microserviciu C++
+├── gateway/             # Aplicația Java (Producer/Consumer RabbitMQ)
+│   ├── src/main/resources/logback-spring.xml # Configurare Loguri -> Loki
+│   └── src/main/resources/static # Frontend
+├── routing-service/     # Microserviciu C++ (RabbitMQ Client)
 │   ├── src/             # Cod sursă C++
 │   └── Dockerfile       # Multi-stage build (Alpine)
-├── docker-compose.yml   # Orchestrare servicii
+├── docker-compose.yml   # Orchestrare (App + Monitoring Stack)
 └── .env                 # Fișier secrete (GitIgnored)
 ```
 
@@ -130,9 +149,9 @@ Proiectul include un workflow automatizat (`.github/workflows/main.yml`) care ru
 
 * **Build & Test Java:** Compilează Gateway-ul și rulează testele unitare cu Maven.
 * **Docker Build:** Verifică dacă imaginile Docker (inclusiv compilarea C++) se construiesc corect.
-* **Security Scan (Opțional):** Scanează codul pentru vulnerabilități folosind Trivy.
+* **Security Scan:** Scanează codul pentru vulnerabilități folosind Trivy.
 
-Dezvoltat de: Minca Teodor Andrei, Mincu Florin Adrian <br>
+Dezvoltat de: Mincă Teodor Andrei, Mincu Florin Adrian <br>
 Grupa: 10LF342 <br>
 Facultatea de Matematică și Informatică, Universitatea Transilvania din Brașov <br>
 Proiect Arhitectură Cloud și DevOps
