@@ -1,5 +1,5 @@
 FROM alpine:3.18 AS build
-RUN apk add --no-cache build-base cmake curl
+RUN apk add --no-cache build-base cmake curl rabbitmq-c rabbitmq-c-dev
 
 WORKDIR /app
 

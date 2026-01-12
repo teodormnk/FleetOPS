@@ -36,6 +36,20 @@ public class FleetController {
 
     private final String ROUTING_SERVICE_URL = "http://routing-service:8081/route";
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @PostMapping("/orders")
+    public Order createOrder(@RequestBody Order order) {
+        order.setStatus("PROCESSING");
+        Order saved = orderRepository.save(order);
+
+        String orderJson = new ObjectMapper().writeValueAsString(saved);
+        rabbitTemplate.convertAndSend(RabbitConfig.QUEUE_ORDER, orderJson);
+
+        return saved;
+    }
+
     public FleetController(VehicleRepository vehicleRepository,
                            OrderRepository orderRepository,
                            MeterRegistry meterRegistry) {
