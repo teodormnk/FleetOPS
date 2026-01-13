@@ -89,14 +89,20 @@ Odată pornită aplicația, aveți acces la următoarele interfețe:
 * Interfață grafică ce permite vizualizarea și testarea manuală a endpoint-urilor REST.
 
 ![Swagger UI](./screenshots/swagger_1.jpg)
-![Swagger UI - /api/orders](./screenshots/swagger_2.jpg)
-![Swagger UI - /api/vehicles](./screenshots/swagger_3.jpg)
-![Swagger UI - /health](./screenshots/swagger_4.jpg)
 
 ### 🔌 3. Endpoint-uri principale (REST)
 
-* `GET /api/vehicles`: Listează flota curentă și statusul fiecărui vehicul.
 * `POST /api/orders`: Creează o comandă și declanșează calculul rutei în microserviciul C++.
+
+![Swagger UI - /api/orders](./screenshots/swagger_2.jpg)
+
+* `GET /api/vehicles`: Listează flota curentă și statusul fiecărui vehicul.
+
+![Swagger UI - /api/vehicles](./screenshots/swagger_3.jpg)
+
+* `GET /health`: Verificare stare sănătate aplicație.
+
+![Swagger UI - /health](./screenshots/swagger_4.jpg)
 
 **Exemplu body JSON:**
 ```json
