@@ -82,6 +82,8 @@ Odată pornită aplicația, aveți acces la următoarele interfețe:
 * Afișează o hartă (OpenStreetMap) cu pozițiile vehiculelor.
 * Pozițiile se actualizează automat la fiecare 3 secunde (simulare server-side).
 
+![FleetOPS Dashboard](./screenshots/dashboard_map.png)
+
 ### 📑 2. Documentație API (Swagger UI)
 * **Acces:** [http://localhost:8088/swagger-ui.html](http://localhost:8088/swagger-ui.html)
 * Interfață grafică ce permite vizualizarea și testarea manuală a endpoint-urilor REST.
@@ -150,6 +152,9 @@ Proiectul include un workflow automatizat (`.github/workflows/main.yml`) care ru
 * **Build & Test Java:** Compilează Gateway-ul și rulează testele unitare cu Maven.
 * **Docker Build:** Verifică dacă imaginile Docker (inclusiv compilarea C++) se construiesc corect.
 * **Security Scan:** Scanează codul pentru vulnerabilități folosind Trivy.
+
+![GitHub Actions Pipeline complete](./screenshots/cicd_pipeline_1.png)
+![GitHub Actions Security Scan](./screenshots/cicd_pipeline_2.png)
 
 Dezvoltat de: Mincă Teodor Andrei, Mincu Florin Adrian <br>
 Grupa: 10LF342 <br>
