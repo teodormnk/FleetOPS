@@ -51,17 +51,17 @@ Din motive de securitate, fișierul de configurare nu este inclus în repository
 Creați un fișier numit **`.env`** în rădăcina proiectului și adăugați următorul conținut:
 
 ```properties
-# Configurare Bază de Date
+# Configurare baza de date
 DB_USER=fleet_admin
-DB_PASSWORD=secret_secure_password
+DB_PASSWORD=parola_secreta_2026
 DB_NAME=fleet_ops_db
 DB_PORT_EXTERNAL=5433
 
 # Configurare Gateway
 GATEWAY_PORT_EXTERNAL=8088
 
-# Configurare Securitate (JWT)
-JWT_SECRET=Cheie_Secreta_Foarte_Lunga_Si_Sigura_Pentru_Demo_2024
+# Configurare securitate (JWT)
+JWT_SECRET=super_secret_jwt_key_2026
 JWT_EXPIRATION_MS=86400000
 ```
 
@@ -88,6 +88,11 @@ Odată pornită aplicația, aveți acces la următoarele interfețe:
 * **Acces:** [http://localhost:8088/swagger-ui.html](http://localhost:8088/swagger-ui.html)
 * Interfață grafică ce permite vizualizarea și testarea manuală a endpoint-urilor REST.
 
+![Swagger UI](./screenshots/swagger_1.jpg)
+![Swagger UI - /api/orders](./screenshots/swagger_2.jpg)
+![Swagger UI - /api/vehicles](./screenshots/swagger_3.jpg)
+![Swagger UI - /health](./screenshots/swagger_4.jpg)
+
 ### 🔌 3. Endpoint-uri principale (REST)
 
 * `GET /api/vehicles`: Listează flota curentă și statusul fiecărui vehicul.
@@ -108,7 +113,7 @@ Odată pornită aplicația, aveți acces la următoarele interfețe:
 3.  Serviciul C++ preia mesajul, calculează ruta și trimite rezultatul în `order.route`.
 4.  Gateway-ul consumă rezultatul și actualizează comanda în baza de date.
 
-## 📊 4. Observabilitate Avansată
+## 📊 4. Observabilitate avansată
 
 Sistemul expune un stack complet de monitorizare accesibil local:
 
@@ -119,11 +124,17 @@ Sistemul expune un stack complet de monitorizare accesibil local:
   1.  Mergeți la meniul **Explore** (busola din stânga).
   2.  Selectați sursa **Prometheus** pentru a vedea grafice (query: `fleet_routes_calculated_total`).
   3.  Selectați sursa **Loki** pentru a vedea logurile centralizate din toate containerele (label: `{app="fleet-gateway"}`).
+* Vizualizare metrici de business și log-uri centralizate.
+
+![Grafana Metrics 1](./screenshots/grafana_dashboard_1.jpg)
+![Grafana Metrics 2](./screenshots/grafana_dashboard_2.jpg)
 
 ### 🐰 RabbitMQ Management
 * **Acces:** [http://localhost:15672](http://localhost:15672)
 * **User/Parolă:** `guest` / `guest`
 * **Funcționalitate:** Monitorizați cozile de mesaje (`order.queue`, `order.route`) și debitul de procesare în timp real.
+
+![RabbitMQ Dashboard](./screenshots/rabbit_dashboard.jpg)
 
 ### ❤️ Health Checks
 * **API:** [http://localhost:8088/actuator/health](http://localhost:8088/actuator/health)
@@ -136,12 +147,16 @@ fleet-ops-project/
 ├── observability/       # Configurare Prometheus
 ├── database/            # Scripturi SQL (Schema + Seed)
 ├── gateway/             # Aplicația Java (Producer/Consumer RabbitMQ)
+│   ├── src/main/java/ro/unitbv/fleetops/ # Cod sursă Java
 │   ├── src/main/resources/logback-spring.xml # Configurare Loguri -> Loki
-│   └── src/main/resources/static # Frontend
+│   └── src/main/resources/static/ # Frontend
 ├── routing-service/     # Microserviciu C++ (RabbitMQ Client)
 │   ├── src/             # Cod sursă C++
 │   └── Dockerfile       # Multi-stage build (Alpine)
+├── screenshots/         # Capturi de ecran pentru README
 ├── docker-compose.yml   # Orchestrare (App + Monitoring Stack)
+├── .gitignore           # Fișiere GitIgnored
+├── README.md            # Documentația proiectului
 └── .env                 # Fișier secrete (GitIgnored)
 ```
 
